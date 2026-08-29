@@ -43,8 +43,8 @@ window.RAF_CONFIG = {
       name: "Sambal Penyet Original",
       short: "Pedas • Padu • Membuka selera",
       description: "Sambal penyet yang bold dan sesuai digandingkan dengan ayam, tempe, tauhu dan nasi.",
-      weight: "200g",
-      weightGram: 200,
+      weight: "100g",
+      weightGram: 100,
       price: 16.90,
       tag: "SPICY FAVOURITE"
     },
@@ -53,8 +53,8 @@ window.RAF_CONFIG = {
       name: "Sambal Tumis Original",
       short: "Pekat • Wangi • Lazat",
       description: "Sambal tumis serbaguna untuk nasi lemak, mee, bihun atau lauk harian.",
-      weight: "200g",
-      weightGram: 200,
+      weight: "100g",
+      weightGram: 100,
       price: 16.90,
       tag: "TRADITIONAL"
     },
