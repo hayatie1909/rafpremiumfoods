@@ -231,8 +231,8 @@ document.querySelector('#orderWhatsapp').addEventListener('click',async()=>{
     await saveOrder(o);
     saveLastOrder(o);
     const text=encodeURIComponent(buildOrderText(o));
-    window.open(`https://wa.me/${cfg.whatsappNumber}?text=${text}`,'_blank','noopener');
     showToast(`Order ${o.orderId} disimpan ✓`);
+    window.location.href=`https://wa.me/${cfg.whatsappNumber}?text=${text}`;
   }catch(e){
     console.error(e);showToast('Order belum berjaya disimpan');
   }finally{
@@ -240,7 +240,7 @@ document.querySelector('#orderWhatsapp').addEventListener('click',async()=>{
   }
 });
 document.querySelector('#footerWhatsapp').addEventListener('click',(e)=>{
-  e.preventDefault();window.open(`https://wa.me/${cfg.whatsappNumber}`,'_blank','noopener');
+  e.preventDefault();window.location.href=`https://wa.me/${cfg.whatsappNumber}`;
 });
 document.querySelector('#year').textContent=new Date().getFullYear();
 renderProducts();renderCart();
