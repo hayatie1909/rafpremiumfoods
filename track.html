@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ms">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Track Order | RAF Premium Foods</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="announcement">RAF PREMIUM FOODS • ORDER TRACKING</div>
+<header class="site-header">
+  <a class="brand" href="index.html"><img src="assets/raf-logo.png" alt="RAF"><div><strong>RAF</strong><span>PREMIUM FOODS</span></div></a>
+  <a class="cart-button" href="index.html">Back to Shop</a>
+</header>
+<main class="status-card">
+  <p class="eyebrow">TRACK ORDER</p>
+  <h1 style="font-family:'Cormorant Garamond',serif;font-size:48px;margin:8px 0 22px">Semak status pesanan</h1>
+  <div class="track-form">
+    <input id="orderId" placeholder="Contoh RAF-260829...">
+    <input id="phone" placeholder="No. telefon">
+    <button class="btn btn-gold" id="checkBtn">Semak</button>
+  </div>
+  <div id="result" style="margin-top:22px"></div>
+</main>
+<script src="config.js"></script>
+<script>
+const cfg=window.RAF_CONFIG;
+const result=document.querySelector('#result');
+document.querySelector('#orderId').value=localStorage.getItem('rafLastOrderId')||'';
+document.querySelector('#checkBtn').onclick=async()=>{
+  const orderId=document.querySelector('#orderId').value.trim();
+  const phone=document.querySelector('#phone').value.trim();
+  if(!orderId||!phone){result.innerHTML='<p>Sila masukkan Order ID dan telefon.</p>';return;}
+  if(cfg.orderApiUrl.includes('PASTE_GOOGLE')){
+    const local=JSON.parse(localStorage.getItem('rafOrder-'+orderId)||'null');
+    if(local && local.customer.phone===phone) render(local);
+    else result.innerHTML='<p>Order belum ditemui. Google Sheet API belum diaktifkan pada versi demo.</p>';
+    return;
+  }
+  try{
+    const url=new URL(cfg.orderApiUrl);
+    url.searchParams.set('action','track');
+    url.searchParams.set('orderId',orderId);
+    url.searchParams.set('phone',phone);
+    const r=await fetch(url); const data=await r.json();
+    if(!data.ok) throw new Error(data.error||'Not found');
+    render(data.order);
+  }catch(e){result.innerHTML='<p>Order tidak ditemui atau maklumat tidak sepadan.</p>';}
+};
+function render(o){
+  result.innerHTML=`<div class="status-grid">
+    <div><small>Order ID</small><strong>${o.orderId}</strong></div>
+    <div><small>Payment</small><strong>${o.paymentStatus||'UNPAID'}</strong></div>
+    <div><small>Delivery</small><strong>${o.deliveryStatus||'NEW ORDER'}</strong></div>
+    <div><small>Consignment</small><strong>${o.consignmentNo||'-'}</strong></div>
+    <div><small>Total</small><strong>RM${Number(o.grandTotal||0).toFixed(2)}</strong></div>
+    <div><small>Verified by</small><strong>${o.verifiedBy||'-'}</strong></div>
+  </div>`;
+}
+</script>
+</body></html>

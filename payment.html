@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bank Transfer | RAF Premium Foods</title>
+<meta name="description" content="Online bank transfer payment for RAF Premium Foods orders.">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="announcement">RAF PREMIUM FOODS • SECURE MANUAL PAYMENT</div>
+<header class="site-header">
+  <a class="brand" href="index.html">
+    <img src="assets/raf-logo.png" alt="RAF">
+    <div><strong>RAF</strong><span>PREMIUM FOODS</span></div>
+  </a>
+  <a class="cart-button" href="index.html">Back to Shop</a>
+</header>
+
+<main class="payment-wrap">
+  <section class="payment-card">
+    <p class="eyebrow">ONLINE BANK TRANSFER</p>
+    <h1>Bayaran Pesanan RAF</h1>
+    <p class="payment-intro">Buat pindahan ke akaun RAF, gunakan <strong>Order ID</strong> sebagai reference, kemudian hantar bukti bayaran untuk verification.</p>
+
+    <div class="bank-box">
+      <div><small>Bank</small><strong id="bankName"></strong></div>
+      <div><small>Account Name</small><strong id="accountName"></strong></div>
+      <div><small>Account Number</small><strong id="accountNumber"></strong></div>
+      <div><small>Payment Reference</small><strong id="paymentRef"></strong></div>
+    </div>
+
+    <div id="bankPending" class="notice" hidden>
+      Akaun bank rasmi RAF belum dimasukkan. Order boleh dibuat sekarang, tetapi bank details perlu dikemas kini sebelum customer membuat transfer.
+    </div>
+
+    <form id="paymentForm">
+      <label>Order ID
+        <input id="orderId" required placeholder="RAF-...">
+      </label>
+      <label>No. telefon semasa order
+        <input id="phone" required placeholder="01X-XXXXXXX">
+      </label>
+      <label>Transaction / Transfer Reference
+        <input id="transferRef" required placeholder="Contoh: M2U123456789">
+      </label>
+      <label>Jumlah dibayar (RM)
+        <input id="amountPaid" type="number" min="0" step="0.01" required placeholder="0.00">
+      </label>
+      <label>Bukti bayaran (JPG/PNG/PDF, maksimum 4MB)
+        <input id="receipt" type="file" accept="image/jpeg,image/png,application/pdf">
+      </label>
+
+      <button class="btn btn-gold full" type="submit" id="submitPayment">Hantar Untuk Verification</button>
+      <a class="btn btn-whatsapp full" id="paymentWhatsapp" href="#">WhatsApp RAF</a>
+    </form>
+
+    <div id="paymentResult"></div>
+
+    <div class="safety-note">
+      <strong>Keselamatan:</strong> RAF tidak akan meminta password bank, PIN, TAC/OTP atau akses ke akaun bank anda.
+    </div>
+  </section>
+</main>
+
+<script src="config.js"></script>
+<script>
+const cfg=window.RAF_CONFIG;
+const qs=new URLSearchParams(location.search);
+const orderIdEl=document.querySelector('#orderId');
+const phoneEl=document.querySelector('#phone');
+const refEl=document.querySelector('#paymentRef');
+const result=document.querySelector('#paymentResult');
+const btn=document.querySelector('#submitPayment');
+
+orderIdEl.value=qs.get('orderId')||localStorage.getItem('rafLastOrderId')||'';
+phoneEl.value=qs.get('phone')||localStorage.getItem('rafLastOrderPhone')||'';
+document.querySelector('#bankName').textContent=cfg.bank.bankName;
+document.querySelector('#accountName').textContent=cfg.bank.accountName;
+document.querySelector('#accountNumber').textContent=cfg.bank.accountNumber;
+refEl.textContent=orderIdEl.value||'Use your Order ID';
+
+orderIdEl.addEventListener('input',()=>refEl.textContent=orderIdEl.value||'Use your Order ID');
+
+const pendingBank=[cfg.bank.bankName,cfg.bank.accountNumber].some(x=>String(x).includes('TO BE UPDATED'));
+document.querySelector('#bankPending').hidden=!pendingBank;
+
+document.querySelector('#paymentWhatsapp').href=`https://wa.me/${cfg.whatsappNumber}?text=${encodeURIComponent('Hi RAF Premium Foods, saya nak semak bayaran untuk Order ID: '+(orderIdEl.value||''))}`;
+
+function fileToBase64(file){
+  return new Promise((resolve,reject)=>{
+    const r=new FileReader();
+    r.onload=()=>resolve(String(r.result).split(',')[1]||'');
+    r.onerror=reject;
+    r.readAsDataURL(file);
+  });
+}
+
+document.querySelector('#paymentForm').addEventListener('submit',async(e)=>{
+  e.preventDefault();
+  const orderId=orderIdEl.value.trim();
+  const phone=phoneEl.value.trim();
+  const transferRef=document.querySelector('#transferRef').value.trim();
+  const amountPaid=Number(document.querySelector('#amountPaid').value||0);
+  const file=document.querySelector('#receipt').files[0];
+
+  if(!orderId||!phone||!transferRef||amountPaid<=0){
+    result.innerHTML='<div class="notice error">Lengkapkan semua maklumat wajib.</div>';return;
+  }
+  if(file && file.size>4*1024*1024){
+    result.innerHTML='<div class="notice error">Fail terlalu besar. Maksimum 4MB.</div>';return;
+  }
+
+  btn.disabled=true;btn.textContent='Menghantar...';
+
+  try{
+    let receiptBase64='', receiptName='', receiptMime='';
+    if(file){
+      receiptBase64=await fileToBase64(file);
+      receiptName=file.name;
+      receiptMime=file.type;
+    }
+
+    const payload={
+      action:'submit_payment',
+      orderId,phone,transferRef,amountPaid,
+      receiptBase64,receiptName,receiptMime
+    };
+
+    if(!cfg.orderApiUrl || cfg.orderApiUrl.includes('PASTE_GOOGLE')){
+      localStorage.setItem('rafPayment-'+orderId,JSON.stringify(payload));
+      result.innerHTML='<div class="notice success"><strong>Demo:</strong> Bukti bayaran disimpan pada browser. Aktifkan Google Apps Script untuk verification sebenar.</div>';
+    }else{
+      const r=await fetch(cfg.orderApiUrl,{
+        method:'POST',
+        headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body:JSON.stringify(payload)
+      });
+      const data=await r.json();
+      if(!data.ok) throw new Error(data.error||'Submission failed');
+      result.innerHTML=`<div class="notice success"><strong>Berjaya.</strong> Bayaran untuk ${orderId} dihantar untuk verification. Status: PENDING VERIFICATION.</div>`;
+    }
+  }catch(err){
+    console.error(err);
+    result.innerHTML='<div class="notice error">Bukti bayaran belum berjaya dihantar. Cuba semula atau WhatsApp RAF.</div>';
+  }finally{
+    btn.disabled=false;btn.textContent='Hantar Untuk Verification';
+  }
+});
+</script>
+</body>
+</html>

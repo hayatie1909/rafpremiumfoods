@@ -1,0 +1,4 @@
+RAF Premium Foods live Google Sheet connection
+Google Apps Script Web App URL has been configured in config.js.
+Payment mode: Manual Online Bank Transfer.
+Replace temporary bank details when Noblemind Resources business account is ready.
