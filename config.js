@@ -3,7 +3,7 @@
 // NEVER put passwords, TAC, PIN or private API keys here.
 window.RAF_CONFIG = {
   siteUrl: "https://rafpremiumfoods.com",
-  whatsappNumber: "60146668492",
+  whatsappNumber: "60146668392",
   senderEmail: "raf-ecommerce@raf.com.my",
   senderAddress: "No. 3, Jalan Lombong Timah 29/48, Taman Orkid Maju 3, Seksyen 29, 40460 Shah Alam, Selangor",
   currency: "MYR",
